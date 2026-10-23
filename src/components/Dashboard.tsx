@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   InventoryProvider,
@@ -409,6 +410,29 @@ function Dashboard() {
               </div>
             </div>
           ) : null}
+
+          <p className="nav-section-label">Platform</p>
+          {[
+            { href: "/console", label: "Overview" },
+            { href: "/docker", label: "Docker Desktop" },
+            { href: "/workflows", label: "Workflow builder" },
+            { href: "/apm", label: "APM service map" },
+            { href: "/cli", label: "Local CLI" },
+            { href: "/agent", label: "AI Agent" },
+            { href: "/architecture", label: "Architecture" },
+          ].map((p) => (
+            <Link key={p.href} href={p.href} className="nav-item">
+              <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none">
+                <path
+                  d="M10 4.5v11M4.5 10h11"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <span className="truncate">{p.label}</span>
+            </Link>
+          ))}
 
           <p className="nav-section-label">Legend</p>
           <div className="space-y-1.5 px-4 pb-2 text-[11.5px] text-[var(--text-muted)]">

@@ -4,9 +4,9 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "DC Monitor — Data Center Asset Observability",
+  title: "Racmond — Data Center Operations Platform",
   description:
-    "Monitor physical and virtual data center server assets on an OpenStreetMap dashboard with ownership, geo-location, project and tag filtering.",
+    "Racmond unifies fleet inventory, containers, workflow automation, APM service maps, local CLI access and an AI agent into one data-center operations platform.",
 };
 
 const themeInitScript = `
