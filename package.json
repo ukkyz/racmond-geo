@@ -1,0 +1,43 @@
+{
+  "name": "nextjs-postgresql-template",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@types/leaflet": "^1.9.20",
+    "@types/leaflet.markercluster": "^1.5.6",
+    "@xyflow/react": "^12.8.6",
+    "dotenv": "^17.3.1",
+    "drizzle-orm": "^1.0.0-rc.5",
+    "leaflet": "^1.9.4",
+    "leaflet.markercluster": "^1.5.3",
+    "next": "^16.4.2",
+    "pg": "^8.20.0",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "react-leaflet": "^5.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.1.17",
+    "@types/node": "22.19.15",
+    "@types/pg": "^8.18.0",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "drizzle-kit": "^1.0.0-rc.5",
+    "eslint": "9.39.4",
+    "eslint-config-next": "^14.2.35",
+    "postcss": "^8.5.31",
+    "tailwindcss": "4.1.17",
+    "tsx": "^4.23.15",
+    "typescript": "5.9.3"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "unrs-resolver@1.12.2": true
+  }
+}
