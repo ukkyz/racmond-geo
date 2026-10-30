@@ -419,6 +419,7 @@ function Dashboard() {
             { href: "/apm", label: "APM service map" },
             { href: "/cli", label: "Local CLI" },
             { href: "/agent", label: "AI Agent" },
+            { href: "/security", label: "Security & posture" },
             { href: "/architecture", label: "Architecture" },
           ].map((p) => (
             <Link key={p.href} href={p.href} className="nav-item">

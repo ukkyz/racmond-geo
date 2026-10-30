@@ -48,6 +48,7 @@ design system and one source of truth for the estate:
 | **APM Service Map** | `/apm` | A Pinpoint / Jaeger-style call graph. Each graph is its own `@xyflow/react` canvas and nodes form a parent/child hierarchy that expands and collapses. |
 | **Local CLI Runner** | `/cli` | Drive any locally installed CLI (`git`, `docker`, `kubectl`, `npm`, …) from the browser. Output streams back live. |
 | **AI Agent** | `/agent` | A built-in agent that diagnoses fleet problems, proposes remediation and can run safe actions — with or without an external LLM. |
+| **Security & Posture** | `/security` | L6 DevSecOps: vulnerability management with reachability, SBOM browser, compliance state and runtime security events. |
 | **Architecture** | `/architecture` | The system architecture rendered as live mermaid diagrams. |
 
 > **Design principle:** every *graph* in the product is a real `@xyflow/react`
@@ -126,6 +127,25 @@ incident, a workflow) and it can:
 It works with a configured LLM (OpenAI-compatible `/chat/completions`) and
 falls back to a built-in **heuristic reasoning engine** that still produces
 useful, evidence-backed diagnosis — so the module is never a dead end.
+
+### Security & posture (L6)
+
+A DevSecOps surface that closes the loop between development, security and
+operations:
+
+- **Vulnerability management** with **reachability** ("reachable", "present",
+  "unknown") and public-exploit flags, not just CVSS.
+- An **AI-triage** mode that ranks findings by business risk.
+- A **SBOM browser** per image/service with licenses and linked CVEs.
+- **Compliance state** for SOC 2, ISO 27001, HIPAA and PCI-DSS with control
+  evidence.
+- **Runtime security** events (eBPF-style) for process, network, file, auth and
+  config drift.
+- One-click **remediate / investigate / accept risk** workflow, with a posture
+  score that recomputes as findings are resolved.
+
+Every finding links back to the **service (L3)** and **asset (L1)** that own it,
+so security is never detached from the estate.
 
 ---
 
@@ -322,6 +342,7 @@ src/
 │   │   ├── apm/page.tsx          # /apm       service map
 │   │   ├── cli/page.tsx          # /cli       local CLI runner
 │   │   ├── agent/page.tsx        # /agent     AI agent console
+│   │   ├── security/page.tsx     # /security  L6 security & posture
 │   │   └── architecture/page.tsx # /architecture mermaid diagrams
 │   └── api/                 # Route handlers
 │       ├── servers/…        # CRUD for fleet assets
@@ -450,9 +471,14 @@ enforced on every write path.
 
 ## 🧭 Roadmap
 
+- **Seven-layer observability** — evolve the platform into a full mission-control
+  plane (asset → runtime → application → code → data → security → business) with
+  a cross-layer AI. See
+  [`docs/roadmap-seven-layer-observability.md`](docs/roadmap-seven-layer-observability.md).
 - Real Docker Engine integration behind the Docker Desktop module.
 - Persistent workflow definitions and a cron/event-driven runner.
 - Distributed tracing ingestion (OTLP) feeding the APM service map.
+- Vulnerability scanning feeds + policy-as-code (OPA/Rego) behind the Security module.
 - Multi-user auth and audit logs for CLI/agent actions.
 - Mobile-responsive fleet map with offline asset capture.
 

@@ -86,6 +86,16 @@ export const PLATFORM_NAV: {
     ),
   },
   {
+    href: "/security",
+    label: "Security",
+    icon: (
+      <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none">
+        <path d="M10 2.5 3 5v5c0 4.4 3 7.5 7 9 4-1.5 7-4.6 7-9V5l-7-2.5Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+        <path d="M7.5 10l1.8 1.8L12.5 8.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
     href: "/architecture",
     label: "Arch",
     icon: (

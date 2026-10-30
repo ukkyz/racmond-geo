@@ -114,6 +114,20 @@ const MODULES = [
       </svg>
     ),
   },
+  {
+    href: "/security",
+    name: "Security & Posture",
+    tag: "DevSecOps",
+    tone: "rose",
+    blurb:
+      "L6 security: vulnerability management with reachability, SBOM browser, compliance state and eBPF-style runtime events.",
+    icon: (
+      <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none">
+        <path d="M10 2.5 3 5v5c0 4.4 3 7.5 7 9 4-1.5 7-4.6 7-9V5l-7-2.5Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+        <path d="M7.5 10l1.8 1.8L12.5 8.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
 ];
 
 function StatCard({
@@ -294,7 +308,7 @@ export default function OverviewPage() {
           reading fleet state and driving safe actions through the same runner.
         </p>
         <div className="mt-3 flex flex-wrap gap-2 text-[11.5px]">
-          {["Inventory →", "Containers →", "Automation →", "Tracing →", "CLI →", "Agent"].map(
+          {["Inventory →", "Containers →", "Automation →", "Tracing →", "CLI →", "Security →", "Agent"].map(
             (step, i) => (
               <span
                 key={step}
