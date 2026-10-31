@@ -505,6 +505,137 @@ select option {
   background: var(--scrollbar-thumb-hover);
 }
 
+/* ---------- Workflow builder nodes ---------- */
+.flow-group-node {
+  border-radius: 14px;
+  border: 1px solid var(--glass-border-strong);
+  background: var(--glass-surface-strong);
+  backdrop-filter: blur(18px) saturate(175%);
+  -webkit-backdrop-filter: blur(18px) saturate(175%);
+  box-shadow: var(--glass-highlight), var(--glass-shadow);
+  padding: 8px;
+  min-width: 170px;
+}
+.flow-action-node {
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-surface-strong);
+  backdrop-filter: blur(16px) saturate(165%);
+  -webkit-backdrop-filter: blur(16px) saturate(165%);
+  box-shadow: var(--glass-highlight), var(--glass-shadow);
+  padding: 9px 12px;
+  min-width: 180px;
+  cursor: grab;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+.flow-action-node:active {
+  cursor: grabbing;
+}
+.flow-action-node-selected {
+  box-shadow:
+    0 0 0 2px var(--accent-soft),
+    0 0 22px var(--accent-glow),
+    var(--glass-shadow);
+}
+
+/* ---------- APM service map nodes ---------- */
+.apm-service-node {
+  border-radius: 14px;
+  border: 1px solid var(--glass-border-strong);
+  background: var(--glass-surface-strong);
+  backdrop-filter: blur(18px) saturate(175%);
+  -webkit-backdrop-filter: blur(18px) saturate(175%);
+  box-shadow: var(--glass-highlight), var(--glass-shadow);
+  padding: 10px 14px;
+  min-width: 210px;
+}
+.apm-instance-node {
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-card);
+  backdrop-filter: blur(16px) saturate(165%);
+  -webkit-backdrop-filter: blur(16px) saturate(165%);
+  box-shadow: var(--glass-highlight);
+  padding: 8px 12px;
+  min-width: 168px;
+}
+.apm-op-node {
+  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-input);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: var(--glass-highlight);
+  padding: 7px 10px;
+  min-width: 150px;
+}
+.apm-node-selected {
+  box-shadow:
+    0 0 0 2px var(--accent-soft),
+    0 0 22px var(--accent-glow),
+    var(--glass-shadow);
+}
+
+/* ---------- Mermaid ---------- */
+.mermaid-wrap {
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+}
+.mermaid-wrap svg {
+  max-width: 100%;
+  height: auto;
+  min-width: 520px;
+}
+.mermaid-wrap .nodeLabel,
+.mermaid-wrap .edgeLabel {
+  fill: var(--text-primary);
+}
+.mermaid-wrap text {
+  fill: var(--text-secondary);
+}
+
+/* ---------- Platform module helpers ---------- */
+.action-btn {
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-input);
+  color: var(--text-secondary);
+  padding: 0.25rem 0.6rem;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+.action-btn:hover {
+  color: var(--accent-text);
+  border-color: var(--glass-border-strong);
+  background: var(--glass-card-hover);
+}
+.action-btn-danger {
+  border-radius: 8px;
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  background: rgba(244, 63, 94, 0.12);
+  color: #fb7185;
+  padding: 0.25rem 0.6rem;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+.action-btn-danger:hover {
+  background: rgba(244, 63, 94, 0.22);
+  color: #fda4af;
+}
+.action-icon {
+  border-radius: 8px;
+  padding: 0.3rem;
+  color: var(--text-muted);
+  transition: all 0.15s ease;
+}
+.action-icon:hover {
+  background: var(--glass-card-hover);
+  color: var(--text-primary);
+}
+
 .fade-in {
   animation: fadeIn 0.24s ease;
 }

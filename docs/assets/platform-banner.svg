@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" width="1200" height="320" role="img" aria-label="Racmond platform diagram">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b0418"/>
+      <stop offset="0.55" stop-color="#160a30"/>
+      <stop offset="1" stop-color="#2a0f52"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="0.18" cy="0.3" r="0.5">
+      <stop offset="0" stop-color="#7c3aed" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#7c3aed" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="0.85" cy="0.75" r="0.5">
+      <stop offset="0" stop-color="#d946ef" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#d946ef" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="brand" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#a855f7"/>
+      <stop offset="0.5" stop-color="#c084fc"/>
+      <stop offset="1" stop-color="#d946ef"/>
+    </linearGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#3b0764" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="320" rx="22" fill="url(#bg)"/>
+  <rect width="1200" height="320" rx="22" fill="url(#glow1)"/>
+  <rect width="1200" height="320" rx="22" fill="url(#glow2)"/>
+
+  <!-- subtle grid -->
+  <g stroke="#a855f7" stroke-opacity="0.08" stroke-width="1">
+    <path d="M0 80 H1200 M0 160 H1200 M0 240 H1200"/>
+    <path d="M200 0 V320 M600 0 V320 M1000 0 V320"/>
+  </g>
+
+  <!-- orbit / map ring -->
+  <g fill="none" stroke="url(#brand)" stroke-opacity="0.35" stroke-width="1.5">
+    <circle cx="905" cy="160" r="104"/>
+    <circle cx="905" cy="160" r="76" stroke-opacity="0.22"/>
+  </g>
+  <g stroke="#c4b5fd" stroke-opacity="0.45" stroke-width="1">
+    <path d="M820 110 L848 138 L882 118"/>
+    <path d="M970 205 L940 178 L968 150"/>
+    <path d="M840 215 L862 186 L896 198"/>
+  </g>
+  <g>
+    <circle cx="905" cy="160" r="26" fill="#1e103a" stroke="url(#brand)" stroke-width="2.5" filter="url(#soft)"/>
+    <text x="905" y="166" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="20" font-weight="700" fill="url(#brand)">R</text>
+  </g>
+  <g font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" fill="#ddd4f6" fill-opacity="0.85">
+    <circle cx="905" cy="70" r="5" fill="#10b981"/><text x="916" y="74">Fleet</text>
+    <circle cx="992" cy="160" r="5" fill="#f59e0b"/><text x="1003" y="164">Docker</text>
+    <circle cx="905" cy="250" r="5" fill="#0ea5e9"/><text x="916" y="254">Workflows</text>
+    <circle cx="818" cy="160" r="5" fill="#a855f7"/><text x="740" y="164" text-anchor="end">APM</text>
+    <circle cx="950" cy="105" r="5" fill="#ef4444"/><text x="961" y="109">CLI</text>
+  </g>
+
+  <!-- left: title block -->
+  <g font-family="ui-sans-serif, system-ui, sans-serif">
+    <text x="56" y="104" font-size="34" font-weight="800" letter-spacing="-0.5" fill="#f5f3ff">Racmond</text>
+    <text x="56" y="136" font-size="15" font-weight="600" fill="url(#brand)">DATA CENTER OPERATIONS PLATFORM</text>
+    <text x="56" y="172" font-size="13.5" fill="#c4b5fd" fill-opacity="0.9">Map-first fleet inventory · container estates · automation</text>
+    <text x="56" y="194" font-size="13.5" fill="#c4b5fd" fill-opacity="0.9">distributed-system tracing · local CLI access · AI agent</text>
+
+    <g transform="translate(56,218)">
+      <rect x="0" y="0" width="196" height="62" rx="14" fill="#ffffff" fill-opacity="0.05" stroke="#c4b5fd" stroke-opacity="0.25"/>
+      <text x="16" y="26" font-size="11" font-weight="700" fill="#a695cc" letter-spacing="0.12">CAPABILITIES</text>
+      <text x="16" y="50" font-size="12" fill="#e9e2ff">8 modules · 1 shell · 1 design system</text>
+    </g>
+  </g>
+</svg>
