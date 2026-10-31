@@ -142,7 +142,7 @@ export default function ServerMap({
   servers,
   selectedId,
   onSelect,
-  center = [25, 10],
+  center = [-3, 117],
 }: {
   servers: ServerDTO[];
   selectedId: number | null;
@@ -152,7 +152,7 @@ export default function ServerMap({
   return (
     <MapContainer
       center={center}
-      zoom={3}
+      zoom={6}
       minZoom={2}
       maxZoom={18}
       worldCopyJump
