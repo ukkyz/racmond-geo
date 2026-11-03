@@ -1,0 +1,41 @@
+'use client';
+import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import { Badge, Select } from '@/components/ui';
+import { DECISIONS, WORKSHOP_ROLES, riceScore, type FeatureDecision, type Priority } from '@/lib/lab/strategy';
+import './lab.css';
+export default function StrategyBoard() {
+  const [priority, setPriority] = useState('all');
+  const [role, setRole] = useState('all');
+  const [view, setView] = useState<'board' | 'roadmap'>('board');
+  const [selected, setSelected] = useState<FeatureDecision | null>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const previousFocus = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (!selected) return;
+    previousFocus.current = document.activeElement as HTMLElement;
+    closeRef.current?.focus();
+    const listener = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSelected(null);
+      if (e.key === 'Tab') {
+        const nodes = Array.from(document.querySelectorAll<HTMLElement>('.lab-dialog-panel button, .lab-dialog-panel a'));
+        const first = nodes[0], last = nodes.at(-1);
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
+      }
+    };
+    document.addEventListener('keydown', listener); const overflow = document.body.style.overflow; document.body.style.overflow = 'hidden';
+    return () => { document.removeEventListener('keydown', listener); document.body.style.overflow = overflow; previousFocus.current?.focus(); };
+  }, [selected]);
+  const filtered = DECISIONS.filter(d => (priority === 'all' || d.priority === priority) && (role === 'all' || d.owner === role)).sort((a,b) => riceScore(b)-riceScore(a));
+  return <div className="lab-page fade-in"><div className="lab-hero"><div><div className="lab-kicker">Product direction / Leadership workshop</div><h1>Four perspectives.<br /><span style={{ color: 'var(--text-muted)' }}>One operating picture.</span></h1><p>A synthesized strategy session between the CEO, CTO, CFO and IT/DevOps. Turn platform ambition into sequenced decisions, explicit trade-offs, and measurable release gates.</p></div><div className="flex flex-col items-end gap-3"><Badge tone="violet">Strategy proposal · 03 Nov 2026</Badge><span className="lab-muted text-[10px]">AI-facilitated synthesis, not actual stakeholder approval</span></div></div>
+    <div className="lab-notice"><strong>The consensus:</strong> prove the rack-to-revenue journey, establish identity and asset ownership, then scale automation. Racmond should correlate the tools you already trust—not become a proprietary replacement for all of them.</div>
+    <div className="lab-role-grid">{WORKSHOP_ROLES.map(r => <section className="lab-panel lab-role" key={r.role} style={{ '--role-color': r.color } as React.CSSProperties}><div className="lab-avatar">{r.role === 'DevOps' ? 'OPS' : r.role}</div><h3>{r.name}</h3><div className="focus">{r.focus}</div><blockquote>“{r.position}”</blockquote></section>)}</div>
+    <div className="lab-filter-row"><div><h2 className="text-base font-semibold">The decisions that move us forward</h2><p className="text-[11px] lab-muted mt-1">RICE = reach × impact × confidence ÷ person-weeks. A ranking aid, not a substitute for release gates.</p></div><div className="flex gap-2"><Select className="lab-filter-select" aria-label="Filter by owner" value={role} onChange={e => setRole(e.target.value)} style={{ minWidth: 110, fontSize: 11, padding: '7px 10px' }}><option value="all">All owners</option>{WORKSHOP_ROLES.map(r => <option key={r.role}>{r.role}</option>)}</Select><Select className="lab-filter-select" aria-label="Filter by priority" value={priority} onChange={e => setPriority(e.target.value)} style={{ minWidth: 110, fontSize: 11, padding: '7px 10px' }}><option value="all">All priorities</option>{(['P0','P1','P2'] as Priority[]).map(p => <option key={p}>{p}</option>)}</Select><div className="lab-segment"><button className={view === 'board' ? 'active' : ''} onClick={() => setView('board')}>Board</button><button className={view === 'roadmap' ? 'active' : ''} onClick={() => setView('roadmap')}>90-day plan</button></div></div></div>
+    {view === 'board' ? <div className="lab-decision-grid">{filtered.map(d => <button key={d.id} className="lab-panel lab-decision" onClick={() => setSelected(d)}><div className="flex justify-between items-center"><Badge tone={d.priority === 'P0' ? 'rose' : d.priority === 'P1' ? 'violet' : 'slate'}>{d.priority} · {d.horizon}</Badge><span className="lab-mono lab-muted">{d.id}</span></div><h3>{d.title}</h3><p>{d.problem}</p><div className="lab-decision-footer"><span>{d.owner} · {d.effort} person-wks</span><span className="lab-score">RICE {riceScore(d)} ↗</span></div></button>)}</div> : <div className="lab-roadmap">{(['0–30 days','31–60 days','61–90 days'] as const).map((h,i) => <section className="lab-panel lab-roadmap-column" key={h}><span className="lab-eyebrow">Horizon 0{i+1}</span><h3>{h}</h3><p>{['Prove value safely · one estate, one journey','Connect evidence · runtime, cost and recovery','Scale deliberately · automation and business impact'][i]}</p>{filtered.filter(d => d.horizon === h).map(d => <button key={d.id} className="lab-roadmap-item text-left w-full" onClick={() => setSelected(d)}><span>{d.id}</span><div>{d.title}<small className="block lab-muted mt-1">{d.owner} · {d.effort} person-weeks</small></div></button>)}<div className="lab-notice mt-4">{['Gate: authenticated pilot; trace continuity verified; ownership baseline measured.','Gate: evidence-linked diagnosis; cost reconciliation; restore test passed.','Gate: replay-safe automation; approved risk policy; board impact brief reviewed.'][i]}</div></section>)}</div>}
+    {filtered.length === 0 && <div className="lab-panel lab-empty mt-4">No decisions match these filters.</div>}
+    <section className="lab-panel mt-6 p-5"><h2 className="text-sm font-semibold mb-3">Where we disagreed—and what we decided</h2><div className="grid gap-5 md:grid-cols-3 text-[11px] leading-7 lab-muted"><div><strong className="block text-[var(--text-primary)]">Autonomy vs. control</strong>CEO wanted autonomous remediation. CTO and DevOps required evidence, approvals and rollback first. Read-only AI ships before guarded write actions.</div><div><strong className="block text-[var(--text-primary)]">Breadth vs. proof</strong>CEO favored a digital-twin showcase. DevOps chose live tracing and SLOs first. A single-site facility pilot stays in the third horizon.</div><div><strong className="block text-[var(--text-primary)]">Chargeback vs. trusted attribution</strong>CFO wanted immediate chargeback. The team agreed to showback until at least 95% of spend can be attributed and reconciled.</div></div></section>
+    <div className="lab-footer"><span>Planning estimates, not quotes. Team capacity and security review determine actual dates.</span><Link href="/trace-lab" className="lab-link">Explore the proof-of-value lab →</Link></div>
+    {selected && <div className="lab-dialog" onClick={e => { if (e.target === e.currentTarget) setSelected(null); }}><section className="lab-dialog-panel" role="dialog" aria-modal="true" aria-labelledby="decision-title"><div className="flex justify-between items-center"><Badge tone="violet">{selected.id} · {selected.priority}</Badge><button ref={closeRef} className="lab-button" onClick={() => setSelected(null)} aria-label="Close decision">✕ Close</button></div><h2 id="decision-title">{selected.title}</h2><p>{selected.proposal}</p><div className="flex flex-wrap gap-2 mt-4"><Badge>{selected.owner}</Badge><Badge>{selected.horizon}</Badge><Badge>{selected.effort} person-weeks</Badge><Badge tone="violet">RICE {riceScore(selected)}</Badge></div><h3>The problem</h3><p>{selected.problem}</p><h3>Acceptance gate</h3><p>{selected.acceptance}</p><h3>Success measure</h3><p>{selected.metric}</p><h3>Dependencies</h3><p>{selected.dependency}</p><h3>The productive tension</h3><p>{selected.dissent}</p><div className="lab-notice mt-5">Proposed decision. Stakeholder sign-off, capacity allocation and production security review are still required.</div></section></div>}
+  </div>;
+}

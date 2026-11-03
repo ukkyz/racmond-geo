@@ -64,6 +64,16 @@ export const PLATFORM_NAV: {
     ),
   },
   {
+    href: "/trace-lab",
+    label: "Trace lab",
+    icon: <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none"><circle cx="4" cy="5" r="2" stroke="currentColor" strokeWidth="1.4"/><circle cx="16" cy="10" r="2" stroke="currentColor" strokeWidth="1.4"/><circle cx="4" cy="15" r="2" stroke="currentColor" strokeWidth="1.4"/><path d="M6 5h3v5h5M6 15h3v-5" stroke="currentColor" strokeWidth="1.4"/></svg>,
+  },
+  {
+    href: "/runtime",
+    label: "JVM / GC",
+    icon: <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none"><rect x="5" y="5" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.4"/><path d="M8 2v3m4-3v3M8 15v3m4-3v3M2 8h3m-3 4h3m10-4h3m-3 4h3M8 12V8h4v4Z" stroke="currentColor" strokeWidth="1.2"/></svg>,
+  },
+  {
     href: "/cli",
     label: "CLI",
     icon: (
@@ -94,6 +104,11 @@ export const PLATFORM_NAV: {
         <path d="M7.5 10l1.8 1.8L12.5 8.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
+  },
+  {
+    href: "/strategy",
+    label: "Roadmap",
+    icon: <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none"><path d="M4 16V4m0 1h11l-2 3 2 3H4" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/></svg>,
   },
   {
     href: "/architecture",
@@ -142,7 +157,7 @@ export function PlatformNav({ compact = false }: { compact?: boolean }) {
         </span>
       </Link>
 
-      <div className="thin-scroll flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
+      <div className="platform-top-nav thin-scroll flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
         {PLATFORM_NAV.map((item) => {
           const active = isActive(item.href);
           return (

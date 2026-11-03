@@ -1,0 +1,223 @@
+name: racmond-lab
+x-otel: &otel
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+  OTEL_RESOURCE_ATTRIBUTES: service.namespace=racmond-lab,deployment.environment.name=lab
+  OTEL_PROPAGATORS: tracecontext,baggage
+x-lab: &lab
+  LAB_INTERNAL_TOKEN: ${LAB_INTERNAL_TOKEN:?Set LAB_INTERNAL_TOKEN in lab/.env}
+  REDIS_PASSWORD: ${REDIS_PASSWORD:?Set REDIS_PASSWORD in lab/.env}
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: racmond
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in lab/.env}
+      POSTGRES_DB: racmond
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/001-schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
+      - ../drizzle/20261103222434_small_marvel_boy/migration.sql:/docker-entrypoint-initdb.d/002-fleet.sql:ro
+    # Entrypoint creates the main DB; init script creates lab DBs only.
+    command: postgres -c max_connections=100
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U racmond -d racmond"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    networks: [lab]
+  mongodb:
+    image: mongo:7
+    volumes: [mongo-data:/data/db]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [lab]
+  redis:
+    image: redis:7-alpine
+    command: ["sh", "-c", "exec redis-server --appendonly yes --appendfsync everysec --requirepass \"$$REDIS_PASSWORD\""]
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    volumes: [redis-data:/data]
+    healthcheck:
+      test: ["CMD-SHELL", "REDISCLI_AUTH=$$REDIS_PASSWORD redis-cli ping | grep PONG"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    networks: [lab]
+  tempo:
+    image: grafana/tempo:2.7.2
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./observability/tempo.yaml:/etc/tempo.yaml:ro
+      - tempo-data:/var/tempo
+    networks: [lab]
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.123.0
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes: ["./observability/otel-collector.yaml:/etc/otelcol/config.yaml:ro"]
+    depends_on: [tempo]
+    networks: [lab]
+  prometheus:
+    image: prom/prometheus:v3.3.0
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks: [lab]
+  grafana:
+    image: grafana/grafana:11.6.0
+    ports: ["127.0.0.1:3001:3000"]
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:?Set GRAFANA_PASSWORD in lab/.env}
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+      GF_AUTH_ANONYMOUS_ENABLED: 'false'
+      GF_ANALYTICS_REPORTING_ENABLED: 'false'
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on: [tempo, prometheus]
+    networks: [lab]
+  crm:
+    build: ./crm
+    environment:
+      <<: [*otel, *lab]
+      OTEL_SERVICE_NAME: crm
+      OTEL_PHP_AUTOLOAD_ENABLED: 'true'
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      MONGODB_URL: mongodb://mongodb:27017
+      REDIS_HOST: redis
+      APP_ENV: production
+      APP_KEY: ${LARAVEL_APP_KEY:?Generate LARAVEL_APP_KEY in lab/.env}
+      LOG_CHANNEL: stderr
+      LOG_LEVEL: error
+    depends_on:
+      mongodb: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      otel-collector: {condition: service_started}
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(strpos(file_get_contents('http://localhost:8001/api/health'), 'true') !== false ? 0 : 1);"]
+      interval: 5s
+      timeout: 4s
+      retries: 30
+    networks: [lab]
+  crm-worker:
+    build: ./crm
+    command: ["php", "artisan", "lab:consume"]
+    environment:
+      <<: [*otel, *lab]
+      OTEL_SERVICE_NAME: crm
+      OTEL_PHP_AUTOLOAD_ENABLED: 'true'
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      MONGODB_URL: mongodb://mongodb:27017
+      REDIS_HOST: redis
+      APP_ENV: production
+      APP_KEY: ${LARAVEL_APP_KEY}
+      LOG_CHANNEL: stderr
+      LOG_LEVEL: error
+    depends_on:
+      crm: {condition: service_healthy}
+    restart: unless-stopped
+    networks: [lab]
+  erp:
+    build: ./erp
+    environment:
+      <<: [*otel, *lab]
+      OTEL_SERVICE_NAME: erp
+      DATABASE_URL: postgresql://racmond:${POSTGRES_PASSWORD}@postgres:5432/lab_erp
+    depends_on:
+      postgres: {condition: service_healthy}
+      otel-collector: {condition: service_started}
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8002/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [lab]
+  assets:
+    build: ./assets
+    environment:
+      <<: [*otel, *lab]
+      OTEL_SERVICE_NAME: assets
+      REDIS_ADDR: redis:6379
+      GOMEMLIMIT: 100MiB
+      OTEL_GO_X_DEPRECATED_RUNTIME_METRICS: 'false'
+    depends_on:
+      redis: {condition: service_healthy}
+      otel-collector: {condition: service_started}
+    healthcheck:
+      test: ["CMD", "/assets", "-healthcheck"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [lab]
+  accounting:
+    build: ./accounting
+    environment:
+      <<: [*otel, *lab]
+      OTEL_SERVICE_NAME: accounting
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_METRICS_EXPORTER: otlp
+      OTEL_LOGS_EXPORTER: none
+      OTEL_METRIC_EXPORT_INTERVAL: '5000'
+      OTEL_INSTRUMENTATION_RUNTIME_TELEMETRY_ENABLED: 'true'
+      DATABASE_URL: jdbc:postgresql://postgres:5432/lab_accounting?user=racmond&password=${POSTGRES_PASSWORD}
+      REDIS_HOST: redis
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      otel-collector: {condition: service_started}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -H \"X-Racmond-Lab-Token: $$LAB_INTERNAL_TOKEN\" http://localhost:8004/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    networks: [lab]
+  racmond:
+    build:
+      context: ..
+      dockerfile: lab/Dockerfile.racmond
+    ports: ["0.0.0.0:3000:3000"]
+    environment:
+      <<: *lab
+      NODE_ENV: production
+      DATABASE_URL: postgresql://racmond:${POSTGRES_PASSWORD}@postgres:5432/racmond
+      LAB_ENABLED: 'true'
+      LAB_CRM_URL: http://crm:8001/api
+      LAB_ERP_URL: http://erp:8002
+      LAB_ASSETS_URL: http://assets:8003
+      LAB_ACCOUNTING_URL: http://accounting:8004
+      LAB_TEMPO_URL: http://tempo:3200
+      OTEL_SERVICE_NAME: commerce
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_NODE_RESOURCE_DETECTORS: env,host,os
+      CLI_ALLOWLIST: uname,whoami,df,free
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    depends_on:
+      postgres: {condition: service_healthy}
+      crm: {condition: service_healthy}
+      erp: {condition: service_healthy}
+      assets: {condition: service_healthy}
+      accounting: {condition: service_healthy}
+    networks: [lab]
+volumes:
+  postgres-data:
+  mongo-data:
+  redis-data:
+  tempo-data:
+  prometheus-data:
+  grafana-data:
+networks:
+  lab:
+    driver: bridge

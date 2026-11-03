@@ -2,7 +2,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import { relations } from "./schema";
 
-const databaseUrl = 'postgresql://ap_admin:ap_secret@localhost:5432/racmond';
+const databaseUrl = process.env.DATABASE_URL ?? "postgresql://ap_admin:ap_secret@localhost:5432/racmond";
 
 if (!databaseUrl) {
   throw new Error("DATABASE_URL is required");

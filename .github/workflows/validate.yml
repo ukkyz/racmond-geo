@@ -1,0 +1,49 @@
+name: Validate Racmond
+on:
+  pull_request:
+  push:
+    branches: ['arena/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --legacy-peer-deps
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+  polyglot-lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Configure isolated local credentials
+        run: |
+          cp lab/.env.example lab/.env
+          sed -i "s|racmond-local-demo-change-me|$(openssl rand -hex 32)|" lab/.env
+          sed -i "s|racmond-local-pg|$(openssl rand -hex 24)|" lab/.env
+          sed -i "s|racmond-local-redis|$(openssl rand -hex 24)|" lab/.env
+          sed -i "s|racmond-local-grafana|$(openssl rand -hex 24)|" lab/.env
+          sed -i "s|LARAVEL_APP_KEY=|LARAVEL_APP_KEY=base64:$(openssl rand -base64 32)|" lab/.env
+      - run: docker compose -f lab/compose.yaml config --quiet
+      - run: docker compose -f lab/compose.yaml up --build -d --wait
+        timeout-minutes: 30
+      - run: bash lab/smoke.sh
+      - name: Capture service logs on failure
+        if: failure()
+        run: docker compose -f lab/compose.yaml logs --tail=200
+      - name: Destroy isolated lab volumes
+        if: always()
+        run: docker compose -f lab/compose.yaml down --volumes

@@ -54,7 +54,8 @@ export default function AgentConsole() {
   };
 
   useEffect(() => {
-    void loadContext();
+    const timer = setTimeout(() => void loadContext(), 0);
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {

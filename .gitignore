@@ -2,3 +2,16 @@
 node_modules/
 .env
 
+
+# Local secrets and polyglot build artifacts
+lab/.env
+lab/**/vendor/
+lab/erp/target/
+lab/accounting/target/
+lab/assets/assets
+lab/crm/storage/logs/*.log
+lab/crm/storage/framework/cache/*.php
+lab/crm/storage/framework/sessions/*.php
+lab/crm/storage/framework/views/*.php
+playwright-report/
+test-results/
