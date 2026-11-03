@@ -1,7 +1,8 @@
 FROM composer:2 AS vendor
 WORKDIR /app
 COPY composer.json ./
-RUN composer install --no-dev --prefer-dist --no-interaction --no-scripts --no-progress
+# Extensions are installed in the runtime stage; Composer only resolves PHP packages here.
+RUN composer install --no-dev --prefer-dist --no-interaction --no-scripts --no-progress --ignore-platform-reqs
 FROM php:8.3-cli-bookworm
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
 RUN install-php-extensions mongodb redis opentelemetry protobuf pcntl
