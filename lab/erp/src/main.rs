@@ -1,5 +1,5 @@
 use axum::{extract::{Path, State}, http::{HeaderMap, StatusCode}, middleware::{self, Next}, response::{IntoResponse, Response}, routing::{get, post}, Json, Router};
-use opentelemetry::{global, propagation::Extractor, trace::Tracer};
+use opentelemetry::{global, propagation::Extractor, trace::TracerProvider};
 use tracing::Instrument;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 use opentelemetry_otlp::WithExportConfig;
