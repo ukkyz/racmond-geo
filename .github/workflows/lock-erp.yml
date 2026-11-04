@@ -1,0 +1,28 @@
+# Temporary bootstrap: generate the ERP lockfile on a Docker-capable runner.
+# Remove this workflow after lab/erp/Cargo.lock has been committed.
+name: Generate ERP lockfile
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  lock:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Resolve dependencies with the ERP builder
+        run: |
+          docker run --rm -v "$PWD/lab/erp:/work" -w /work rust:1.90-bookworm \
+            cargo generate-lockfile
+      - name: Publish lockfile for review and commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo 'ERP_LOCKFILE_BASE64'
+            base64 -w0 lab/erp/Cargo.lock
+            echo
+          } > /tmp/erp-lock.md
+          gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/comments" \
+            -f body="$(cat /tmp/erp-lock.md)"
