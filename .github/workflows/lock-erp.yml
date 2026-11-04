@@ -3,6 +3,9 @@
 name: Generate ERP lockfile
 on:
   workflow_dispatch:
+  push:
+    branches: ['arena/c1e275a8-racmond-geo']
+    paths: ['.github/workflows/lock-erp.yml']
 permissions:
   contents: write
 jobs:
