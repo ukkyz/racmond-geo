@@ -42,9 +42,8 @@ export async function POST(req: Request) {
     span.setAttribute('order.id', id); span.setAttribute('racmond.scenario', parsed.scenario);
     const order: LabOrder = { id, quantity, amountCents, scenario: parsed.scenario, mode: 'live', status: 'pending', createdAt: new Date().toISOString(), traceId, invoiceId: null, assetId: null, replayed: Boolean(previous), message: 'Order accepted; waiting for the asynchronous accounting consumer.', spans: [] };
     const body = JSON.stringify({ id, quantity, amountCents, scenario: parsed.scenario });
-    // Explicit W3C header keeps the trace continuous even if a bundler isolates the global propagator.
-    const sc = span.spanContext();
-    const headers = { 'Content-Type': 'application/json', traceparent: `00-${sc.traceId}-${sc.spanId}-${sc.traceFlags.toString(16).padStart(2, '0')}` };
+    // labFetch injects the active W3C context; avoid a second manual traceparent header.
+    const headers = { 'Content-Type': 'application/json' };
     let publicationAttempted = false;
     try {
       for (const [service, path] of [['crm', 'orders'], ['erp', 'reservations'], ['assets', 'allocations']] as const) {

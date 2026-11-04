@@ -20,7 +20,8 @@ class ConsumeInvoices extends Command {
             foreach (($batches ?: []) as $stream) foreach (($stream[1] ?? []) as $message) {
                 $fields = $message[1]; $f = [];
                 for ($i=0;$i<count($fields);$i+=2) $f[$fields[$i]]=$fields[$i+1];
-                $parent = TraceContextPropagator::getInstance()->extract(['traceparent'=>$f['traceparent'] ?? '']);
+                $traceparent = trim(explode(',', (string)($f['traceparent'] ?? ''))[0]);
+                $parent = TraceContextPropagator::getInstance()->extract(['traceparent'=>$traceparent]);
                 $span = Globals::tracerProvider()->getTracer('racmond.crm')->spanBuilder('invoice.posted process')->setParent($parent)->setSpanKind(SpanKind::KIND_CONSUMER)->setAttribute('messaging.system','redis_streams')->setAttribute('messaging.destination.name','invoice.posted')->startSpan();
                 $scope = $span->activate();
                 try {

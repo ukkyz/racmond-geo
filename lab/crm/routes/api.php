@@ -22,8 +22,9 @@ function labSpan(string $name, callable $fn, array $attributes = [], $parent = n
 }
 function labRequestSpan(Request $request, string $name, callable $fn) {
     // Parse W3C traceparent explicitly so the CRM joins the gateway trace even if auto-instrumentation starts a local root.
-    $parent = TraceContextPropagator::getInstance()->extract(['traceparent'=>$request->header('traceparent',''),'tracestate'=>$request->header('tracestate','')]);
-    $traceparent = (string)$request->header('traceparent','');
+    // Some proxies/clients send duplicate headers; Laravel joins them with commas, so use the first value.
+    $traceparent = trim(explode(',', (string)$request->header('traceparent',''))[0]);
+    $parent = TraceContextPropagator::getInstance()->extract(['traceparent'=>$traceparent,'tracestate'=>$request->header('tracestate','')]);
     if (preg_match('/^00-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})$/', $traceparent, $m) && $m[1] !== str_repeat('0',32) && $m[2] !== str_repeat('0',16)) {
         $remote = SpanContext::createFromRemoteParent($m[1], $m[2], hexdec($m[3]) & 1);
         $parent = Context::getRoot()->withContextValue(Span::wrap($remote));
