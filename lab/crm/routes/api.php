@@ -3,7 +3,9 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use MongoDB\Client;
 use OpenTelemetry\API\Globals;
+use OpenTelemetry\API\Trace\Span;
 use OpenTelemetry\API\Trace\SpanKind;
+use OpenTelemetry\API\Trace\SpanContext;
 use OpenTelemetry\API\Trace\StatusCode;
 use OpenTelemetry\API\Trace\Propagation\TraceContextPropagator;
 use OpenTelemetry\Context\Context;
@@ -19,8 +21,14 @@ function labSpan(string $name, callable $fn, array $attributes = [], $parent = n
     finally { $scope->detach(); $span->end(); }
 }
 function labRequestSpan(Request $request, string $name, callable $fn) {
+    // Parse W3C traceparent explicitly so the CRM joins the gateway trace even if auto-instrumentation starts a local root.
     $parent = TraceContextPropagator::getInstance()->extract(['traceparent'=>$request->header('traceparent',''),'tracestate'=>$request->header('tracestate','')]);
-    $span = Globals::tracerProvider()->getTracer('racmond.crm')->spanBuilder($name)->setParent($parent)->setSpanKind(SpanKind::KIND_SERVER)->startSpan();
+    $traceparent = (string)$request->header('traceparent','');
+    if (preg_match('/^00-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})$/', $traceparent, $m) && $m[1] !== str_repeat('0',32) && $m[2] !== str_repeat('0',16)) {
+        $remote = SpanContext::createFromRemoteParent($m[1], $m[2], hexdec($m[3]) & 1);
+        $parent = Context::getRoot()->withContextValue(Span::wrap($remote));
+    }
+    $span = Globals::tracerProvider()->getTracer('racmond.crm')->spanBuilder($name)->setParent($parent)->setSpanKind(SpanKind::KIND_SERVER)->setAttribute('racmond.traceparent', $traceparent)->startSpan();
     $scope = $span->activate();
     try { return $fn($span); } catch (\Throwable $e) { $span->recordException($e); $span->setStatus(StatusCode::STATUS_ERROR); throw $e; }
     finally { $scope->detach(); $span->end(); }
