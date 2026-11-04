@@ -16,6 +16,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import jakarta.annotation.PostConstruct;
 import java.lang.management.*;
 import java.nio.charset.StandardCharsets;
@@ -29,6 +31,7 @@ import com.sun.management.GarbageCollectionNotificationInfo;
 
 @SpringBootApplication @EnableScheduling
 public class AccountingApplication {
+    private static final Logger log = LoggerFactory.getLogger(AccountingApplication.class);
     private final JdbcTemplate jdbc;
     private final StringRedisTemplate redis;
     private final TransactionTemplate tx;
@@ -95,7 +98,7 @@ public class AccountingApplication {
                         jdbc.update("INSERT INTO outbox(invoice_id,order_id,asset_id,amount_cents,traceparent) VALUES(?,?,?,?,?) ON CONFLICT (invoice_id,traceparent) DO NOTHING",invoiceId,UUID.fromString(orderId),assetId,amount,carrier.getOrDefault("traceparent",""));
                     });
                     redis.opsForStream().acknowledge("orders.accepted","accounting",record.getId());
-                } catch(Exception e) { span.recordException(e);span.setStatus(StatusCode.ERROR); } finally { span.end(); }
+                } catch(Exception e) { log.error("orders.accepted processing failed for {}", record.getId(), e); span.recordException(e);span.setStatus(StatusCode.ERROR); } finally { span.end(); }
             }
         }
     }
@@ -110,7 +113,7 @@ public class AccountingApplication {
                 GlobalOpenTelemetry.getPropagators().getTextMapPropagator().inject(Context.current(),fields,(c,k,v)->c.put(k,v));
                 redis.opsForStream().add(StreamRecords.string(fields).withStreamKey("invoice.posted"));
                 jdbc.update("UPDATE outbox SET published_at=now() WHERE id=?",row.get("id"));
-            }catch(Exception e){span.recordException(e);span.setStatus(StatusCode.ERROR);}finally{span.end();}
+            }catch(Exception e){log.error("invoice.posted publication failed for outbox {}", row.get("id"), e);span.recordException(e);span.setStatus(StatusCode.ERROR);}finally{span.end();}
         }
     }
     @GetMapping("/internal/runtime") Map<String,Object> runtime() {

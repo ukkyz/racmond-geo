@@ -131,6 +131,7 @@ services:
     environment:
       <<: [*otel, *lab]
       OTEL_SERVICE_NAME: erp
+      RUST_LOG: info
       DATABASE_URL: postgresql://racmond:${POSTGRES_PASSWORD}@postgres:5432/lab_erp
     depends_on:
       postgres: {condition: service_healthy}

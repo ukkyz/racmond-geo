@@ -17,7 +17,18 @@ for attempt in $(seq 1 40); do
   if printf '%s' "$RESULT" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const o=JSON.parse(s).order;const names=new Set(o.spans.map(s=>s.service));process.exit(o.status==="completed"&&names.size===5?0:1)})'; then
     echo 'PASS: order completed and one trace contains all five services.'; break
   fi
-  [[ "$attempt" -lt 40 ]] || { echo "$RESULT"; echo 'Timed out waiting for business completion and trace export.' >&2; exit 1; }
+  [[ "$attempt" -lt 40 ]] || {
+    echo "$RESULT"
+    echo '--- Redis stream diagnostics ---'
+    "${COMPOSE[@]}" exec -T redis sh -c 'REDISCLI_AUTH="$REDIS_PASSWORD" redis-cli XINFO STREAM orders.accepted; REDISCLI_AUTH="$REDIS_PASSWORD" redis-cli XINFO GROUPS orders.accepted; REDISCLI_AUTH="$REDIS_PASSWORD" redis-cli XINFO STREAM invoice.posted; REDISCLI_AUTH="$REDIS_PASSWORD" redis-cli XINFO GROUPS invoice.posted' || true
+    echo '--- Accounting persistence diagnostics ---'
+    "${COMPOSE[@]}" exec -T postgres psql -U racmond -d lab_accounting -c "SELECT count(*) AS invoices FROM invoices; SELECT count(*) AS outbox_rows, count(published_at) AS published FROM outbox; SELECT count(*) AS journal_rows FROM journal_entries;" || true
+    echo '--- CRM worker logs ---'
+    "${COMPOSE[@]}" logs --tail=80 crm-worker || true
+    echo '--- Accounting logs ---'
+    "${COMPOSE[@]}" logs --tail=120 accounting || true
+    echo 'Timed out waiting for business completion and trace export.' >&2; exit 1;
+  }
   sleep 2
 done
 count_invoices() { "${COMPOSE[@]}" exec -T postgres psql -U racmond -d lab_accounting -At -c "SELECT count(*) FROM invoices WHERE order_id='$ID';"; }

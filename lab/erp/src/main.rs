@@ -56,7 +56,8 @@ async fn main() -> Result<(),Box<dyn std::error::Error>> {
     global::set_tracer_provider(provider.clone());
     use tracing_subscriber::layer::SubscriberExt;
     use tracing_subscriber::util::SubscriberInitExt;
-    tracing_subscriber::registry().with(tracing_subscriber::fmt::layer()).with(tracing_opentelemetry::layer().with_tracer(provider.tracer("racmond.erp"))).init();
+    let filter = tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info"));
+    tracing_subscriber::registry().with(filter).with(tracing_subscriber::fmt::layer()).with(tracing_opentelemetry::layer().with_tracer(provider.tracer("racmond.erp"))).init();
     global::set_text_map_propagator(opentelemetry_sdk::propagation::TraceContextPropagator::new());
     let db=PgPoolOptions::new().max_connections(5).connect(&std::env::var("DATABASE_URL")?).await?;
     let state=AppState { db, token:std::env::var("LAB_INTERNAL_TOKEN").unwrap_or_default() };
