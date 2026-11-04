@@ -8,6 +8,7 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.redis.connection.stream.*;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import jakarta.annotation.PostConstruct;
 import java.lang.management.*;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
@@ -37,7 +39,8 @@ public class AccountingApplication {
     public AccountingApplication(JdbcTemplate jdbc, StringRedisTemplate redis, TransactionTemplate tx) { this.jdbc=jdbc;this.redis=redis;this.tx=tx; }
     public static void main(String[] args) { SpringApplication.run(AccountingApplication.class,args); }
     @PostConstruct void setup() {
-        try { redis.opsForStream().createGroup("orders.accepted",ReadOffset.from("0"),"accounting"); } catch (Exception e) { if (!String.valueOf(e.getMessage()).contains("BUSYGROUP")) throw e; }
+        // MKSTREAM avoids a startup race with the Go producer: the stream may not exist yet.
+        try { redis.execute((RedisCallback<String>) connection -> connection.streamCommands().xGroupCreate("orders.accepted".getBytes(StandardCharsets.UTF_8), "accounting", ReadOffset.from("0"), true)); } catch (Exception e) { if (!String.valueOf(e.getMessage()).contains("BUSYGROUP")) throw e; }
         for (GarbageCollectorMXBean bean : ManagementFactory.getGarbageCollectorMXBeans()) {
             if (bean instanceof NotificationEmitter emitter) emitter.addNotificationListener((notification,handback) -> {
                 if (!GarbageCollectionNotificationInfo.GARBAGE_COLLECTION_NOTIFICATION.equals(notification.getType())) return;
