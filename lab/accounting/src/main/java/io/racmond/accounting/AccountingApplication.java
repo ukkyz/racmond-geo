@@ -40,7 +40,8 @@ public class AccountingApplication {
     public static void main(String[] args) { SpringApplication.run(AccountingApplication.class,args); }
     @PostConstruct void setup() {
         // MKSTREAM avoids a startup race with the Go producer: the stream may not exist yet.
-        try { redis.execute((RedisCallback<String>) connection -> connection.streamCommands().xGroupCreate("orders.accepted".getBytes(StandardCharsets.UTF_8), "accounting", ReadOffset.from("0"), true)); } catch (Exception e) { if (!String.valueOf(e.getMessage()).contains("BUSYGROUP")) throw e; }
+        // Spring/Lettuce may wrap BUSYGROUP, so inspect the whole cause chain.
+        try { redis.execute((RedisCallback<String>) connection -> connection.streamCommands().xGroupCreate("orders.accepted".getBytes(StandardCharsets.UTF_8), "accounting", ReadOffset.from("0"), true)); } catch (Exception e) { if (!isBusyGroup(e)) throw e; }
         for (GarbageCollectorMXBean bean : ManagementFactory.getGarbageCollectorMXBeans()) {
             if (bean instanceof NotificationEmitter emitter) emitter.addNotificationListener((notification,handback) -> {
                 if (!GarbageCollectionNotificationInfo.GARBAGE_COLLECTION_NOTIFICATION.equals(notification.getType())) return;
@@ -52,6 +53,12 @@ public class AccountingApplication {
                 while(gcEvents.size()>100) gcEvents.pollFirst();
             },null,null);
         }
+    }
+    private static boolean isBusyGroup(Throwable error) {
+        for (Throwable t=error;t!=null;t=t.getCause()) {
+            if ("RedisBusyException".equals(t.getClass().getSimpleName()) || String.valueOf(t.getMessage()).contains("BUSYGROUP")) return true;
+        }
+        return false;
     }
     private static final TextMapGetter<Map<Object,Object>> GETTER = new TextMapGetter<>() {
         public Iterable<String> keys(Map<Object,Object> carrier) { return carrier.keySet().stream().map(Object::toString).toList(); }
