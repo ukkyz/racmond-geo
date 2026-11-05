@@ -53,7 +53,7 @@ npm run typecheck
 npm run lint
 npm test
 npm run build
-# Only when Docker is available:
+# Only when Docker is available (CI runs this on every push; see docs/implementation-validation.md):
 docker compose -f lab/compose.yaml config --quiet
 docker compose -f lab/compose.yaml up --build -d
 bash lab/smoke.sh

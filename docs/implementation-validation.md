@@ -1,7 +1,8 @@
 # Implementation validation — 5 November 2026
 
-**Green run: [41958721142](https://github.com/ukkyz/racmond-geo/actions/runs/41958721142) on commit
-`c02d1f1` — `web` ✓ and `polyglot-lab` ✓** (build, start and the full live `lab/smoke.sh`). The details
+**Green runs: [41958721142](https://github.com/ukkyz/racmond-geo/actions/runs/41958721142) on commit
+`c02d1f1` and [41959441763](https://github.com/ukkyz/racmond-geo/actions/runs/41959441763) on commit
+`5d0aafe` — `web` ✓ and `polyglot-lab` ✓ in both** (build, start and the full live `lab/smoke.sh`). The details
 below come from that run, from the preceding run
 [41957854929](https://github.com/ukkyz/racmond-geo/actions/runs/41957854929) (commit `8c85f19`) that
 isolated the last defect, and from local checks in this workspace. CI is the only Docker-capable
