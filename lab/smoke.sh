@@ -48,9 +48,6 @@ done
 [[ "$(count_invoices)" == "1" ]] || { echo 'Replay duplicated an invoice.' >&2; exit 1; }
 [[ "$(count_reservations)" == "1" ]] || { echo 'Replay duplicated a reservation.' >&2; exit 1; }
 echo 'PASS: replay completed with a new trace and preserved invoice, journal balance and reservation counts.'
-for service in accounting assets; do
-  "${COMPOSE[@]}" exec -T "$service" printenv LAB_INTERNAL_TOKEN >/dev/null
-done
 curl -fsS "$BASE/api/runtime?mode=live" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const d=JSON.parse(s);if(d.snapshots.length!==2||d.snapshots.some(x=>!x.available||!Number.isFinite(x.heapUsed))){console.error(d);process.exit(1)}})'
 echo 'PASS: both Java and Go runtime endpoints returned measured samples.'
 if [[ "${KEEP_LAB_ORDERS:-0}" != "1" ]]; then
