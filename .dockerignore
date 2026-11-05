@@ -1,0 +1,9 @@
+node_modules
+.next
+.git
+.env*
+lab/**/vendor
+lab/erp/target
+lab/accounting/target
+lab/assets/assets
+*.tsbuildinfo

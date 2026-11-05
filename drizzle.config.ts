@@ -5,6 +5,6 @@ export default defineConfig({
   schema: './src/db/schema.ts',
   dialect: 'postgresql',
   dbCredentials: {
-    url: 'postgresql://ap_admin:ap_secret@localhost:5432/racmond'
+    url: process.env.DATABASE_URL ?? "postgresql://ap_admin:ap_secret@localhost:5432/racmond"
   },
 });

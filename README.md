@@ -15,6 +15,16 @@
 
 ---
 
+## AI context and executable tracing lab
+
+- **Project skill:** [`.agents/skills/racmond-geo/SKILL.md`](.agents/skills/racmond-geo/SKILL.md), with a Claude-compatible entry under `.claude/skills/`.
+- **Start-of-task context:** [`docs/AI_CONTEXT.md`](docs/AI_CONTEXT.md) explains product intent, architecture, current capabilities and demo/live boundaries in plain English.
+- **Rack-to-revenue trace lab:** `/trace-lab` connects Next.js, PHP Laravel, Rust, Go and Java Spring Boot across MongoDB, PostgreSQL and Redis Streams. The UI works in explicit demo mode; [`lab/README.md`](lab/README.md) starts the real Compose stack with OpenTelemetry, Tempo, Prometheus and Grafana.
+- **JVM / Go garbage collection:** `/runtime` provides heap, pool, collection and pause monitoring, with separately labeled synthetic and measured modes.
+- **Leadership workshop:** [`docs/leadership-workshop.md`](docs/leadership-workshop.md) and `/strategy` contain a clearly labeled role synthesis, prioritized features, dissent, release gates and a 90-day sequencing proposal.
+
+> **Implementation status:** the original Docker, workflow execution, APM and security surfaces include simulations. The fleet is database-backed; the new trace lab has an optional real OTLP pipeline. See the AI context brief for the exact truth matrix rather than treating every README feature description as a production integration.
+
 ## Table of contents
 
 - [What is Racmond?](#what-is-racmond)
@@ -45,7 +55,10 @@ design system and one source of truth for the estate:
 | **Overview** | `/console` | A capability hub that links every module and summarises fleet health. |
 | **Docker Desktop** | `/docker` | A Docker Desktop-style estate view: containers, images, volumes, networks and Compose projects with live stats and lifecycle actions. |
 | **Workflow Builder** | `/workflows` | A no-code automation builder. Compose triggers, conditions, actions and AI steps on a drag-and-drop canvas and simulate a run. |
-| **APM Service Map** | `/apm` | A Pinpoint / Jaeger-style call graph. Each graph is its own `@xyflow/react` canvas and nodes form a parent/child hierarchy that expands and collapses. |
+| **Trace Lab** | `/trace-lab` | Explicit demo plus optional live five-language OTLP journey, persistent business records and trace waterfall. |
+| **JVM / Go Runtime** | `/runtime` | Heap and GC workbench with labeled demo/live samples. |
+| **Leadership Roadmap** | `/strategy` | Synthesized executive/technical workshop and decision board. |
+| **APM Service Map (demo)** | `/apm` | A Pinpoint / Jaeger-style call graph. Each graph is its own `@xyflow/react` canvas and nodes form a parent/child hierarchy that expands and collapses. |
 | **Local CLI Runner** | `/cli` | Drive any locally installed CLI (`git`, `docker`, `kubectl`, `npm`, …) from the browser. Output streams back live. |
 | **AI Agent** | `/agent` | A built-in agent that diagnoses fleet problems, proposes remediation and can run safe actions — with or without an external LLM. |
 | **Security & Posture** | `/security` | L6 DevSecOps: vulnerability management with reachability, SBOM browser, compliance state and runtime security events. |
@@ -401,6 +414,8 @@ psql -d racmond -c "GRANT ALL PRIVILEGES ON DATABASE racmond TO ap_admin;"
 npm run db:push
 ```
 
+The initial generated SQL migration is under `drizzle/`. Both the app and Drizzle honor `DATABASE_URL`.
+
 If you skip this, the app auto-seeds on first use via `seedIfEmpty()` and will
 fail with a clear error if the tables do not exist.
 
@@ -465,6 +480,7 @@ enforced on every write path.
 | `start` | `next start` | Serve a production build. |
 | `lint` | `eslint .` | Lint the project. |
 | `typecheck` | `tsc --noEmit` | Type-check without emitting. |
+| `test` | `tsx --test tests/*.test.ts` | Scenario, telemetry and model invariant tests. |
 | `db:push` | `drizzle-kit push` | Push the schema to the database. |
 
 ---

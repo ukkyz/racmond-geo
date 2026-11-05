@@ -1,0 +1,88 @@
+name: Validate Racmond
+on:
+  pull_request:
+  push:
+    branches: ['arena/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+defaults:
+  run:
+    # Explicit Bash enables pipefail so `docker ... | tee` cannot hide failures.
+    shell: bash
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --legacy-peer-deps
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+  polyglot-lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Configure isolated local credentials
+        run: |
+          cp lab/.env.example lab/.env
+          sed -i "s|racmond-local-demo-change-me|$(openssl rand -hex 32)|" lab/.env
+          sed -i "s|racmond-local-pg|$(openssl rand -hex 24)|" lab/.env
+          sed -i "s|racmond-local-redis|$(openssl rand -hex 24)|" lab/.env
+          sed -i "s|racmond-local-grafana|$(openssl rand -hex 24)|" lab/.env
+          sed -i "s|LARAVEL_APP_KEY=|LARAVEL_APP_KEY=base64:$(openssl rand -base64 32)|" lab/.env
+      - run: docker compose -f lab/compose.yaml config --quiet
+      - name: Build lab images
+        run: docker compose -f lab/compose.yaml build --progress=plain 2>&1 | tee /tmp/lab-build.log
+        timeout-minutes: 30
+      - name: Start lab
+        run: docker compose -f lab/compose.yaml up -d --wait 2>&1 | tee /tmp/lab-up.log
+        timeout-minutes: 10
+      - name: Run live smoke checks
+        run: bash lab/smoke.sh 2>&1 | tee /tmp/lab-smoke.log
+        timeout-minutes: 6
+      - name: Capture service logs on failure
+        if: failure()
+        run: |
+          docker compose -f lab/compose.yaml ps -a > /tmp/lab-ps.log || true
+          docker compose -f lab/compose.yaml logs --tail=160 accounting crm crm-worker erp assets racmond otel-collector tempo > /tmp/lab-services.log || true
+          docker compose -f lab/compose.yaml logs --tail=200 accounting > /tmp/lab-accounting.log || true
+          docker compose -f lab/compose.yaml logs --tail=120 crm-worker assets racmond > /tmp/lab-workers.log || true
+          {
+            echo '## Lab smoke tail'
+            tail -c 16000 /tmp/lab-smoke.log 2>/dev/null || true
+            echo '## Lab container status'
+            tail -c 6000 /tmp/lab-ps.log 2>/dev/null || true
+            echo '## Accounting logs'
+            tail -c 7000 /tmp/lab-accounting.log 2>/dev/null || true
+            echo '## Worker, assets and gateway logs'
+            tail -c 7000 /tmp/lab-workers.log 2>/dev/null || true
+            echo '## Lab build tail'
+            tail -c 8000 /tmp/lab-build.log 2>/dev/null || true
+            echo '## Lab startup tail'
+            tail -c 8000 /tmp/lab-up.log 2>/dev/null || true
+            echo '## Service logs'
+            tail -c 10000 /tmp/lab-services.log 2>/dev/null || true
+          } > /tmp/lab-diagnostics.md
+          cat /tmp/lab-diagnostics.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Publish diagnostics to the commit for restricted-egress review
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/comments"             -f body="$(cat /tmp/lab-diagnostics.md)"
+      - name: Destroy isolated lab volumes
+        if: always()
+        run: docker compose -f lab/compose.yaml down --volumes

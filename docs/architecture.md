@@ -229,3 +229,36 @@ flowchart LR
   Next <--> Bucket
   Next --> Pool --> Tools
 ```
+
+---
+
+## 9. Executable trace lab and runtime workbench
+
+The diagrams above include design intent and demonstration modules. For the current implementation boundary, read [`AI_CONTEXT.md`](AI_CONTEXT.md). The executable reference environment in [`../lab/`](../lab/README.md) adds:
+
+```mermaid
+flowchart LR
+  UI[Racmond browser] -->|same-origin API| N[Commerce · Next.js]
+  N -->|W3C HTTP| P[CRM · Laravel]
+  N -->|W3C HTTP| R[ERP · Rust]
+  N -->|W3C HTTP| G[Assets · Go]
+  P --> M[(MongoDB)]
+  R --> PG[(PostgreSQL)]
+  G --> Q[(Redis Streams)]
+  Q -->|orders.accepted + traceparent| J[Accounting · Java]
+  J -->|invoice + journal + outbox| PG
+  J -->|invoice.posted| Q
+  Q --> P
+  N -.->|OTLP| C[OTel Collector]
+  P -.-> C
+  R -.-> C
+  G -.-> C
+  J -.-> C
+  C --> T[Tempo]
+  C --> PR[Prometheus]
+  T --> GF[Grafana]
+  PR --> GF
+  N -->|server-side trace query| T
+```
+
+`/runtime` separately polls token-protected Java/Go runtime endpoints. It labels synthetic and measured samples, shows memory pools and GC events, and does not implement heap dumps or forced collection. `/strategy` exposes the leadership feature decisions documented in [`leadership-workshop.md`](leadership-workshop.md).
