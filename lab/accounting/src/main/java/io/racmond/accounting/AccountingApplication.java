@@ -29,7 +29,8 @@ import javax.management.NotificationEmitter;
 import javax.management.openmbean.CompositeData;
 import com.sun.management.GarbageCollectionNotificationInfo;
 
-@SpringBootApplication @EnableScheduling
+// The controller annotation is required for the /internal/runtime handler declared in this class.
+@SpringBootApplication @EnableScheduling @RestController
 public class AccountingApplication {
     private static final Logger log = LoggerFactory.getLogger(AccountingApplication.class);
     private final JdbcTemplate jdbc;
